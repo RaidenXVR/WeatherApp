@@ -3,25 +3,14 @@ import os
 import time
 
 from kivymd.app import MDApp
-from kivymd.uix.button import MDFlatButton, MDRectangleFlatButton, MDIconButton, MDFloatingActionButton
-from kivymd.uix.datatables import MDDataTable
-from kivymd.uix.dialog import MDDialog
-from kivymd.uix.label import MDLabel, MDIcon
-from kivymd.uix.list import OneLineListItem, MDList, TwoLineListItem, ThreeLineListItem, ThreeLineIconListItem, \
-    IconLeftWidget, ThreeLineAvatarListItem, ImageLeftWidget, OneLineIconListItem
-from kivymd.uix.navigationdrawer import MDNavigationDrawer
-# from kivymd.uix.screen import Screen
+from kivymd.uix.list import OneLineListItem, ThreeLineIconListItem, IconLeftWidget
 from kivymd.uix.textfield import MDTextField
 from kivy.lang import Builder
-from helpers import username_helper, list_helper, screen_helper, menu_helper
-from kivy.uix.scrollview import ScrollView
-from kivy.metrics import dp
-from kivymd.uix.toolbar import MDTopAppBar, MDBottomAppBar, MDActionBottomAppBarButton, MDFabBottomAppBarButton
+from helpers import menu_helper
 from kivy.core.window import Window
 from kivy.uix.screenmanager import Screen, ScreenManager
-from kivy.storage.dictstore import DictStore
-from kivy.core.window.window_sdl2 import WindowSDL
 from kivy.clock import Clock
+from kivy.graphics import *
 
 Window.size = (300, 500)
 
@@ -29,7 +18,8 @@ Window.size = (300, 500)
 class WeatherApp(MDApp):
     def build(self):
         screen = Builder.load_string(menu_helper)
-        self.theme_cls.primary_palette = "Green"
+
+        self.theme_cls.primary_palette = "Blue"
         ipt = MDTextField()
 
         return screen
@@ -69,19 +59,31 @@ class HomeScreen(Screen):
     is_dark: bool = False
 
     def change_theme(self, app_obj: WeatherApp):
+        """
+        Function to toggle change theme to dark or light.
+
+        :param app_obj: The currently running WeatherApp instance.
+        :return:
+        """
         self.is_dark = not self.is_dark
         # app_obj.update_items_list()
 
         if self.is_dark:
             app_obj.theme_cls.theme_style = "Dark"
+            with self.canvas.before:
+
+                Rectangle(pos=self.pos, size=self.size, source="./images/home_bg_dm.png")
             self.ids.home_top_bar.left_action_items = [["weather-sunny", lambda x: self.change_theme(app_obj)]]
         else:
             app_obj.theme_cls.theme_style = "Light"
+            with self.canvas.before:
+                Rectangle(pos=self.pos, size=self.size, source="./images/home_bg_lm.png")
+
             self.ids.home_top_bar.left_action_items = [["moon-waxing-crescent", lambda x: self.change_theme(app_obj)]]
 
 
 class WeatherScreen(Screen):
-    def set_tables(self, city, lat: float, long: float):
+    def set_tables(self, city: str, lat: float, long: float):
         pass
 
     def back_to_menu(self):
@@ -91,12 +93,13 @@ class WeatherScreen(Screen):
 
 
 class CityListScreen(Screen):
+    search_event = None
 
-    def __init__(self, **kw):
-        super().__init__(**kw)
-        self.search_event = None
-
-    def on_enter(self, *args):
+    def on_enter(self):
+        """
+        Function to update the List of City upon entering the search functionality. Called automatically on enter.
+        :return:
+        """
         app_path = os.path.dirname(os.path.abspath(__file__))
         with open(os.path.join(app_path, "cities.json"), "r") as j:
             cities_json = json.load(j)
@@ -108,6 +111,13 @@ class CityListScreen(Screen):
             self.ids.city_list.add_widget(item)
 
     def add_city(self, city, city_value):
+        """
+        Function to add city to Home and Weather, then saving it to a JSON file.
+
+        :param city: The name of the city.
+        :param city_value: The Latitude and Longitude coordinate of the city.
+        :return:
+        """
         app_path = os.path.dirname(os.path.abspath(__file__))
         # api implementation here...
         # city_value: {"lat": latitude, "long": longitude}
@@ -120,6 +130,11 @@ class CityListScreen(Screen):
         self.back_to_menu()
 
     def search_city(self, query):
+        """
+        Function to search for the city in the list. It is limited to only Indonesia Cities.
+        :param query: the search query.
+        :return:
+        """
         app_path = os.path.dirname(os.path.abspath(__file__))
 
         with open(os.path.join(app_path, "cities.json"), "r") as j:
@@ -144,6 +159,11 @@ class CityListScreen(Screen):
                 self.ids.city_list.add_widget(item)
 
     def on_text(self, instance):
+        """
+        Function to search for cities in real-time when the input is more than 2 character with a 0.2 seconds delay.
+        :param instance: The search box that hold the search query.
+        :return:
+        """
         if self.search_event:
             self.search_event.cancel()
 
