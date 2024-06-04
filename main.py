@@ -3,8 +3,7 @@ import os
 import time
 
 from kivymd.app import MDApp
-from kivymd.uix.list import OneLineListItem, ThreeLineIconListItem, IconLeftWidget
-from kivymd.uix.textfield import MDTextField
+from kivymd.uix.list import OneLineListItem,ImageRightWidget, ThreeLineRightIconListItem
 from kivy.lang import Builder
 from helpers import menu_helper
 from kivy.core.window import Window
@@ -12,7 +11,6 @@ from kivy.uix.screenmanager import Screen, ScreenManager
 from kivy.clock import Clock
 from kivy.graphics import *
 
-Window.size = (300, 500)
 
 
 class WeatherApp(MDApp):
@@ -20,7 +18,6 @@ class WeatherApp(MDApp):
         screen = Builder.load_string(menu_helper)
 
         self.theme_cls.primary_palette = "Blue"
-        ipt = MDTextField()
 
         return screen
 
@@ -41,12 +38,35 @@ class WeatherApp(MDApp):
         self.root.screens[0].ids.list_container.clear_widgets()
         for key in datas.keys():
             data = datas[key]
-            icn = IconLeftWidget(icon="weather-sunny")
-            city = ThreeLineIconListItem(text=key,
-                                         secondary_text=f"Temperature: {data['temp']}",
-                                         tertiary_text=f"Humidity: {data['hum']}",
-                                         on_release=lambda x: self.change_screen("weather"))
+
+            icn = ImageRightWidget(source="./images/few_cloud-day.png")
+            # img = FitImage(source="./images/partly_cloudy.png")
+            # icn.add_widget(img)
+            city = ThreeLineRightIconListItem(text=f"{data['temp']}°C",
+                                              secondary_text=key,
+                                              tertiary_text=f"Humidity: {data['hum']}%",
+                                              on_release=lambda x: self.change_screen("weather"), divider='Inset',
+                                              divider_color=[244 / 255, 249 / 255, 249 / 255, 0.7])
+
+            city.height = 250
+            city.font_style = "H3"
+            city.secondary_font_style = "H5"
+            if self.theme_cls.theme_style == "Light":
+                city.text_color = [10/255, 25/255, 49/255,0.8]
+                city.secondary_text_color =[10/255, 25/255, 49/255,1]
+                city.tertiary_text_color =[10/255, 25/255, 49/255,1]
+            else:
+                city.text_color = [244/255,249/255,249/255,0.7]
+                city.secondary_text_color = [244/255,249/255,249/255,0.7]
+                city.tertiary_text_color = [244/255,249/255,249/255,0.7]
+
+            # icn.size = [150,105]
             city.add_widget(icn)
+
+            city.children[0].size = [250,250]
+            # city.add_widget()
+            # print(city.children[0].children)
+
 
             self.root.current_screen.ids.list_container.add_widget(city)
 
@@ -71,17 +91,19 @@ class HomeScreen(Screen):
         if self.is_dark:
             app_obj.theme_cls.theme_style = "Dark"
             with self.canvas.before:
+                Rectangle(pos=self.pos, size=self.size,
+                          source="./images/home_bg_dm.png")
 
-                Rectangle(pos=self.pos, size=self.size, source="./images/home_bg_dm.png")
-            self.ids.home_top_bar.left_action_items = [["weather-sunny", lambda x: self.change_theme(app_obj)]]
+            self.ids.theme_button.icon = "weather-sunny"
         else:
             app_obj.theme_cls.theme_style = "Light"
             with self.canvas.before:
-                Rectangle(pos=self.pos, size=self.size, source="./images/home_bg_lm.png")
+                Rectangle(pos=self.pos, size=self.size,
+                          source="./images/home_bg_lm.png")
 
-            self.ids.home_top_bar.left_action_items = [["moon-waxing-crescent", lambda x: self.change_theme(app_obj)]]
+            self.ids.theme_button.icon = "moon-waxing-crescent"
 
-
+        app_obj.update_items_list()
 class WeatherScreen(Screen):
     def set_tables(self, city: str, lat: float, long: float):
         pass
@@ -107,7 +129,8 @@ class CityListScreen(Screen):
         cities = list(cities_json.keys())[:40]
 
         for city in cities:
-            item = OneLineListItem(text=city, on_release=lambda x, city_=city: self.add_city(city_, cities_json[city_]))
+            item = OneLineListItem(text=city, on_release=lambda x, city_=city: self.add_city(
+                city_, cities_json[city_]))
             self.ids.city_list.add_widget(item)
 
     def add_city(self, city, city_value):
@@ -167,7 +190,8 @@ class CityListScreen(Screen):
         if self.search_event:
             self.search_event.cancel()
 
-        self.search_event = Clock.schedule_once(lambda dt: self.search_city(instance.text), 0.2)
+        self.search_event = Clock.schedule_once(
+            lambda dt: self.search_city(instance.text), 0.2)
 
     def back_to_menu(self):
         self.manager.current = "home"
@@ -176,6 +200,8 @@ class CityListScreen(Screen):
 
 
 if __name__ == "__main__":
+    Window.size = (300, 500)
+
     sm = ScreenManager()
     sm.add_widget(HomeScreen(name='home'))
     sm.add_widget(WeatherScreen(name='weather'))

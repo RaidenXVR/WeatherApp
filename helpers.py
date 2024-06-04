@@ -1,61 +1,3 @@
-username_helper = """
-MDTextField:
-    hint_text: "Username..."
-    helper_text: "Forgot Username?"
-    helper_text_mode: "on_focus"
-    icon_right: "weather-cloudy"
-    icon_right_color: app.theme_cls.primary_color
-    pos_hint: {"center_x":0.5,"center_y":0.5}
-    size_hint_x: None
-    width: 300
-"""
-
-list_helper ="""
-Screen:
-    ScrollView:
-        MDList:
-            id: list_container
-"""
-
-screen_helper="""
-#: import MDActionBottomAppBarButton kivymd.uix.toolbar.MDActionBottomAppBarButton
-Screen:
-    MDNavigationLayout:
-        ScreenManager:
-            Screen:
-                BoxLayout:
-                    orientation: 'vertical'
-                    MDTopAppBar:
-                        title: "Toolbar Demo"
-                        anchor_title: 'left'
-                        left_action_items: [["menu", lambda x: nav_drawer.set_state("open")]]
-                        right_action_items: [["help", lambda x: app.navigation_draw()]]
-                        elevation: 5
-                    MDLabel:
-                        text: "Hello World!"
-                        halign: 'center'    
-        
-                    MDBottomAppBar:
-                        id: bottom_bar
-                        action_items: [MDActionBottomAppBarButton(icon="language-python", pos_hint={"center_x":0.1, "center_y":0.5}),MDActionBottomAppBarButton(icon="coffee",pos_hint={"center_x":0.27, "center_y":0.5}) ]
-                        size_hint_y: 0.15
-                        allow_hidden: True
-            
-        MDNavigationDrawer:
-            id: nav_drawer
-            size_hint: (0.9,1)
-            BoxLayout:
-                MDIconButton:
-                    icon: "close"
-                    pos_hint: {"center_x":0.05,"center_y":0.95}
-                    on_release: nav_drawer.set_state("close")
-                    pos_hint: {"center_x": 1,"center_y":0.95}
-                MDLabel:
-                    text: "Fitran Alfian Nizar"
-                    font_style: "Subtitle1"
-                    pos_hint: {"center_x": 1,"center_y":0.95}       
-"""
-
 menu_helper="""
 #: import MDTextField kivymd.uix.textfield.MDTextField
 ScreenManager:
@@ -66,29 +8,52 @@ ScreenManager:
 <HomeScreen>:
     id: home
     name: 'home'
+    canvas.before:
+        Rectangle:
+            pos: self.pos
+            size: self.size
+            source: "./images/home_bg_lm.png"
+    
+    MDIconButton:
+        id: theme_button
+        md_bg_color: [244/255,249/255,249/255,0.7] if app.theme_cls.theme_style == "Light" else [7/255,37/255,65/255,0.7]
+        size: "20sp", "20sp"
+        icon_size: "16sp"
+        icon: "moon-waxing-crescent"
+        on_release: home.change_theme(app)
+        pos_hint: {"center_x":0.1, "center_y":0.94}
+        
+    MDIconButton:
+        id: tray_button
+        md_bg_color: [244/255,249/255,249/255,0.7] if app.theme_cls.theme_style == "Light" else [7/255,37/255,65/255,0.7]
+        size: "20sp", "20sp"
+        icon_size: "16sp"
+        icon: "rhombus-split"
+        pos_hint: {"center_x":0.9, "center_y":0.94}
+        
+    MDFillRoundFlatButton:
+        id: add_button
+        icon: "plus"
+        text: "Add other city..."
+        text_color: [0,0,0,1] if app.theme_cls.theme_style == "Light" else [1,1,1,1]
+        pos_hint: {"center_x":0.5,"center_y":0.94}
+        on_release: app.change_screen('cities')
+        md_bg_color: [244/255,249/255,249/255,0.7] if app.theme_cls.theme_style == "Light" else [7/255,37/255,65/255,0.7]
+        
     BoxLayout:
         id: box_layout
-        size_hint: 1,1
+        size_hint: 1,0.93
         orientation: 'vertical'
-        
-        MDTopAppBar:
-            id: home_top_bar
-            title: "Weathers"
-            left_action_items: [["moon-waxing-crescent", lambda x: home.change_theme(app)]]
-            right_action_items: [["help"]]
-            anchor_title: 'center'
-            elevation: 5
-        
+        padding: [0,50,0,0]     
         ScrollView:
             id: scroll_view
-            size_hint: 1,0.5
+            size_hint: 1,1
+            pos_hint: {"center_x": 0.5, "center_y":0.8}
             MDList:
                 id: list_container
         
-    MDFloatingActionButton:
-        icon: "plus"
-        pos_hint: {"center_x":0.8,"center_y":0.1}
-        on_release: app.change_screen('cities')
+
+
             
             
 
