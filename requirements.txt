@@ -5,7 +5,3 @@ python-dotenv
 pytz
 plyer
 pyowm
-kivy-deps.angle
-kivy-deps.glew
-kivy-deps.gstreamer
-kivy-deps.sdl2
