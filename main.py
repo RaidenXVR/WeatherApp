@@ -19,6 +19,8 @@ from kivy.lang import Builder
 from kivymd.uix.relativelayout import MDRelativeLayout
 from kivymd.uix.swiper import MDSwiperItem
 from kivymd.uix.selectioncontrol import MDCheckbox
+from plyer import gps
+from plyer.utils import platform
 
 from helpers import menu_helper
 from kivy.core.window import Window
@@ -31,6 +33,10 @@ from functions import get_weather, get_location
 class WeatherApp(MDApp):
     del_trig = False
     checked_cities = []
+
+    def __init__(self, **kwargs):
+        super().__init__(kwargs)
+        self.gps_started = None
 
     def build(self):
         screen = Builder.load_string(menu_helper)
@@ -83,7 +89,24 @@ class WeatherApp(MDApp):
             screen.ids.swiper_main.add_widget(swiper)
 
     def on_start(self):
+        if platform == 'android':
+            from jnius import autoclass
+            PythonActivity = autoclass('org.kivy.android.PythonActivity')
+            activity = PythonActivity.mActivity
+            Context = autoclass('android.content.Context')
+            activity.checkSelfPermission(Context.LOCATION_SERVICE)
 
+            # Request permission if not already granted
+            Permission = autoclass('android.Manifest$permission')
+            PermissionsChecker = autoclass('android.support.v4.content.ContextCompat')
+            if PermissionsChecker.checkSelfPermission(activity, Permission.ACCESS_FINE_LOCATION) != 0:
+                PermissionRequester = autoclass('android.support.v4.app.ActivityCompat')
+                PermissionRequester.requestPermissions(activity, [Permission.ACCESS_FINE_LOCATION], 1)
+
+        if not self.gps_started:
+            gps.configure()
+            gps.start(minTime=1000, minDistance=0)
+            self.gps_started = True
         asyncio.run(self.show_details())
         pass
 
@@ -403,7 +426,7 @@ class CityListScreen(Screen):
         :return:
         """
 
-        self.app_obj.update_weather()
+        asyncio.run(self.app_obj.update_weather())
 
         app_path = os.path.dirname(os.path.abspath(__file__))
         # api implementation here...
