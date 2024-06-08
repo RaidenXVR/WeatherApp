@@ -29,14 +29,10 @@ from kivy.clock import Clock
 from kivy.graphics import *
 from functions import get_weather, get_location
 
-
 class WeatherApp(MDApp):
     del_trig = False
     checked_cities = []
-
-    def __init__(self, **kwargs):
-        super().__init__(kwargs)
-        self.gps_started = None
+    gps_started = False
 
     def build(self):
         screen = Builder.load_string(menu_helper)
@@ -89,24 +85,8 @@ class WeatherApp(MDApp):
             screen.ids.swiper_main.add_widget(swiper)
 
     def on_start(self):
-        if platform == 'android':
-            from jnius import autoclass
-            PythonActivity = autoclass('org.kivy.android.PythonActivity')
-            activity = PythonActivity.mActivity
-            Context = autoclass('android.content.Context')
-            activity.checkSelfPermission(Context.LOCATION_SERVICE)
-
-            # Request permission if not already granted
-            Permission = autoclass('android.Manifest$permission')
-            PermissionsChecker = autoclass('android.support.v4.content.ContextCompat')
-            if PermissionsChecker.checkSelfPermission(activity, Permission.ACCESS_FINE_LOCATION) != 0:
-                PermissionRequester = autoclass('android.support.v4.app.ActivityCompat')
-                PermissionRequester.requestPermissions(activity, [Permission.ACCESS_FINE_LOCATION], 1)
-
-        if not self.gps_started:
-            gps.configure()
-            gps.start(minTime=1000, minDistance=0)
-            self.gps_started = True
+        if platform == "android":
+            self.request_android_permissions()
         asyncio.run(self.show_details())
         pass
 
@@ -326,7 +306,33 @@ class WeatherApp(MDApp):
         else:
             self.checked_cities.remove(checkbox)
 
+    def request_android_permissions(self):
+        """
+        Since API 23, Android requires permission to be requested at runtime.
+        This function requests permission and handles the response via a
+        callback.
 
+        The request will produce a popup if permissions have not already been
+        been granted, otherwise it will do nothing.
+        """
+        from android.permissions import request_permissions, Permission
+
+        def callback(permissions, results):
+            """
+            Defines the callback to be fired when runtime permission
+            has been granted or denied. This is not strictly required,
+            but added for the sake of completeness.
+            """
+            if all([res for res in results]):
+                print("callback. All permissions granted.")
+            else:
+                print("callback. Some permissions refused.")
+
+        request_permissions([Permission.ACCESS_COARSE_LOCATION,
+                             Permission.ACCESS_FINE_LOCATION], callback)
+        # # To request permissions without a callback, do:
+        # request_permissions([Permission.ACCESS_COARSE_LOCATION,
+        #                      Permission.ACCESS_FINE_LOCATION])
 class HomeScreen(Screen):
     is_dark: bool = False
     app_obj = None
