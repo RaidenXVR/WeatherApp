@@ -140,6 +140,7 @@ class WeatherApp(MDApp):
     async def update_weather(self):
 
         app_path = os.path.dirname(os.path.abspath(__file__))
+        user_data={}
         try:
             with open(os.path.join(app_path, "UserData.json"), "r") as n:
                 user_data = json.load(n)
