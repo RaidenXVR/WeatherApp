@@ -36,7 +36,7 @@ version = 0.43
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
-requirements = python3,kivy==2.3.0,kivymd==1.2.0,pillow,pyowm,requests,pytz,plyer,python-dotenv,geojson,PySocks==1.7.1,libbz2,pyjnius,logging
+requirements = python3,kivy==2.3.0,kivymd==1.2.0,pillow,pyowm,requests,pytz,plyer,python-dotenv,geojson,PySocks==1.7.1,libbz2,pyjnius
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
