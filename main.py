@@ -48,6 +48,7 @@ class WeatherApp(MDApp):
                 datas = json.load(d)
 
         except FileNotFoundError:
+            logging.warning("Not found userdata.json: show_details")
             datas = {"saved_cities": {}, "last_update": datetime.now().isoformat()}
             try:
                 city, lat, lon = await get_location()
@@ -714,5 +715,5 @@ if __name__ == "__main__":
     sm.add_widget(CityListScreen(name='cities'))
     try:
         WeatherApp().run()
-    except JSONDecodeError as e:
-        os.remove(os.path.join(app_path,"UserData.json"))
+    except Exception as e:
+        logging.warning(str(e))
