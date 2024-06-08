@@ -1,5 +1,6 @@
 import asyncio
 import json
+import logging
 import os
 
 from datetime import datetime, timedelta
@@ -53,6 +54,7 @@ class WeatherApp(MDApp):
                 city_weather = await get_weather(lat, lon)
                 datas["saved_cities"][city] = city_weather
             except Exception as e:
+                logging.error(e)
                 dialog = MDDialog(text="Cannot Use GPS. Please Add City Manually.", buttons=[
                     MDFlatButton(
                         text="Cancel",
@@ -138,9 +140,14 @@ class WeatherApp(MDApp):
     async def update_weather(self):
 
         app_path = os.path.dirname(os.path.abspath(__file__))
-        with open(os.path.join(app_path, "UserData.json"), "r") as n:
-            user_data = json.load(n)
-
+        try:
+            with open(os.path.join(app_path, "UserData.json"), "r") as n:
+                user_data = json.load(n)
+        except FileNotFoundError:
+            user_data["saved_cities"] ={}
+            user_data["last_update"] = None
+            with open(os.path.join(app_path,"UserData.json"), "w") as d:
+                json.dump(user_data, d)
         names = list(user_data["saved_cities"].keys())
         last_up = user_data["last_update"]
 
@@ -163,6 +170,8 @@ class WeatherApp(MDApp):
             for c in coor:
                 new_datas[names[idx]] = await get_weather(float(c["lat"]), float(c["long"]))
         except Exception as e:
+            logging.error(e)
+
             dialog = MDDialog(text="Cannot Retrieve Location.", buttons=[
                 MDFlatButton(
                     text="Cancel",
@@ -484,6 +493,8 @@ class CityListScreen(Screen):
             city, lat, lon = await get_location()
             city_weather = await get_weather(lat, lon)
         except Exception as e:
+            logging.error(e)
+
             dialog = MDDialog(text="Cannot Use GPS. Please Add City Manually.", buttons=[
                 MDFlatButton(
                     text="Cancel",

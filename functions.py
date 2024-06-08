@@ -1,4 +1,5 @@
 import json
+import logging
 import time
 
 import pytz
@@ -85,8 +86,9 @@ async def get_location():
         gps.start()
         time.sleep(0.2)
     except Exception as e:
+        logging.error(e)
         return e
-    else:
+    finally:
         gps.stop()
 
     lat = gps.location.get("lat")
