@@ -662,8 +662,6 @@ class CheckboxLeftWidget(IRightBodyTouch, MDCheckbox):
 
 
 if __name__ == "__main__":
-    Window.size = (300, 500)
-
     sm = ScreenManager()
 
     sm.add_widget(WeatherScreen(name='weather'))
