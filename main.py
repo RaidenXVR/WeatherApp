@@ -3,6 +3,7 @@ import json
 import os
 
 from datetime import datetime, timedelta
+from json import JSONDecodeError
 
 from kivy.animation import Animation
 from kivy.metrics import sp
@@ -662,11 +663,15 @@ class CheckboxLeftWidget(IRightBodyTouch, MDCheckbox):
 
 
 if __name__ == "__main__":
+    app_path = os.path.dirname(os.path.abspath(__file__))
+
     sm = ScreenManager()
 
     sm.add_widget(WeatherScreen(name='weather'))
 
     sm.add_widget(HomeScreen(name='home'))
     sm.add_widget(CityListScreen(name='cities'))
-
-    WeatherApp().run()
+    try:
+        WeatherApp().run()
+    except JSONDecodeError as e:
+        os.remove(os.path.join(app_path,"UserData.json"))
