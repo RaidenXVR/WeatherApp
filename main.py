@@ -51,31 +51,25 @@ class WeatherApp(MDApp):
                 datas = json.load(d)
 
         except FileNotFoundError:
-            logging.warning("Not found userdata.json: show_details")
+            logging.warning("Not found UserData.json: show_details")
             datas = {"saved_cities": {}, "last_update": datetime.now().isoformat()}
-            try:
-                city, lat, lon = await get_location()
-                city_weather = await get_weather(lat, lon)
-                datas["saved_cities"][city] = city_weather
-            except Exception as e:
-                logging.error(e)
-                dialog = MDDialog(text="Cannot Use GPS. Please Add City Manually.", buttons=[
-                    MDFlatButton(
-                        text="Cancel",
-                        theme_text_color="Custom",
-                        on_release=lambda x: self.stop()
-                    ),
-                    MDFlatButton(
-                        text="Add City",
-                        theme_text_color="Custom",
+            dialog = MDDialog(text="Please Add City In The Next Screen.", buttons=[
+                MDFlatButton(
+                    text="Cancel",
+                    theme_text_color="Custom",
+                    on_release=lambda x: self.stop()
+                ),
+                MDFlatButton(
+                    text="Add City",
+                    theme_text_color="Custom",
 
-                    ),
-                ])
-                dialog.buttons[1].bind(on_release= lambda x: self.change_screen("cities"))
-                dialog.buttons[1].bind(on_release=lambda x: dialog.dismiss())
-                dialog.open()
+                ),
+            ])
+            dialog.buttons[1].bind(on_release= lambda x: self.change_screen("cities"))
+            dialog.buttons[1].bind(on_release=lambda x: dialog.dismiss())
+            dialog.open()
 
-                return
+            return
         saved_cities = datas["saved_cities"]
 
         screen = [obj for obj in self.root.screens if obj.__class__.__name__ == "WeatherScreen"][0]
