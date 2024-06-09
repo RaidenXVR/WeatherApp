@@ -1,7 +1,7 @@
 import json
 import logging
 import time
-
+from android.storage import app_storage_path
 import pytz
 import requests
 from pyowm import OWM
@@ -16,7 +16,7 @@ from plyer import gps
 
 async def get_weather(lat: float, long: float):
     try:
-        app_path = os.path.dirname(os.path.abspath(__file__))
+        app_path = app_storage_path()
         dv.load_dotenv()
         tk = dv.get_key(os.path.join(app_path, ".env"), "WEATHER")
 
@@ -79,7 +79,7 @@ def utc_to_gmt_7(utc_time_str):
     return gmt7_time.hour
 
 async def get_location():
-    app_path = os.path.dirname(os.path.abspath(__file__))
+    app_path = app_storage_path()
 
     try:
         gps.configure(on_location=lambda **kwargs: print(kwargs))
@@ -96,7 +96,7 @@ async def get_location():
     config_dict = config.get_default_config_for_subscription_type('developer')
 
     dv.load_dotenv()
-    tk = dv.get_key(".env", "WEATHER")
+    tk = dv.get_key(os.path.join(app_path,".env"), "WEATHER")
     owm = OWM(api_key=tk, config=config_dict)
     manager = owm.weather_manager()
 

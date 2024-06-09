@@ -2,6 +2,7 @@ import asyncio
 import json
 import logging
 import os
+from android.storage import app_storage_path
 
 from datetime import datetime, timedelta
 from json import JSONDecodeError
@@ -42,7 +43,7 @@ class WeatherApp(MDApp):
         return screen
 
     async def show_details(self):
-        app_path = os.path.dirname(os.path.abspath(__file__))
+        app_path = app_storage_path()
         try:
             with open(os.path.join(app_path, "UserData.json"), "r") as d:
                 datas = json.load(d)
@@ -94,7 +95,8 @@ class WeatherApp(MDApp):
         pass
 
     def update_items_list(self):
-        app_path = os.path.dirname(os.path.abspath(__file__))
+        app_path = app_storage_path()
+
 
         try:
             with open(os.path.join(app_path, "UserData.json"), "r") as j:
@@ -140,7 +142,7 @@ class WeatherApp(MDApp):
 
     async def update_weather(self):
 
-        app_path = os.path.dirname(os.path.abspath(__file__))
+        app_path = app_storage_path()
         user_data={}
         try:
             with open(os.path.join(app_path, "UserData.json"), "r") as n:
@@ -233,7 +235,7 @@ class WeatherApp(MDApp):
         self.update_items_list()
 
     def del_trigger_on(self):
-        app_path = os.path.dirname(os.path.abspath(__file__))
+        app_path = app_storage_path()
         screen = [obj for obj in self.root.screens if obj.__class__.__name__ == "HomeScreen"][0]
         if not self.del_trig:
 
@@ -423,7 +425,7 @@ class CityListScreen(Screen):
         """
         app: WeatherApp = WeatherApp().get_running_app()
 
-        app_path = os.path.dirname(os.path.abspath(__file__))
+        app_path = app_storage_path()
         with open(os.path.join(app_path, "cities.json"), "r") as j:
             cities_json = json.load(j)
 
@@ -445,7 +447,7 @@ class CityListScreen(Screen):
 
         asyncio.run(self.app_obj.update_weather())
 
-        app_path = os.path.dirname(os.path.abspath(__file__))
+        app_path = app_storage_path()
         # api implementation here...
         # city_value: {"lat": latitude, "long": longitude}
         lat = float(city_value["lat"])
@@ -454,7 +456,7 @@ class CityListScreen(Screen):
 
             city_weather = asyncio.run(get_weather(lat, long))
         except Exception as e:
-            dialog = MDDialog(text="Cannot Use GPS. Please Add City Manually", buttons=[
+            dialog = MDDialog(text=f"Something is Wrong:{e}", buttons=[
                 MDFlatButton(
                     text="Cancel",
                     theme_text_color="Custom",
@@ -487,7 +489,7 @@ class CityListScreen(Screen):
         Function to add city to Home and Weather, then saving it to a JSON file.
         :return:
         """
-        app_path = os.path.dirname(os.path.abspath(__file__))
+        app_path = app_storage_path()
         # api implementation here...
         # city_value: {"lat": latitude, "long": longitude}
 
@@ -529,7 +531,7 @@ class CityListScreen(Screen):
         :return:
         """
 
-        app_path = os.path.dirname(os.path.abspath(__file__))
+        app_path = app_storage_path()
 
         with open(os.path.join(app_path, "cities.json"), "r") as j:
             cities_json = json.load(j)
@@ -705,7 +707,7 @@ class CheckboxLeftWidget(IRightBodyTouch, MDCheckbox):
 
 
 if __name__ == "__main__":
-    app_path = os.path.dirname(os.path.abspath(__file__))
+    app_path = app_storage_path()
 
     sm = ScreenManager()
 
@@ -716,4 +718,4 @@ if __name__ == "__main__":
     try:
         WeatherApp().run()
     except Exception as e:
-        logging.warning(str(e))
+        logging.error(str(e.__cause__))
