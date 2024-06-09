@@ -1,6 +1,8 @@
 import json
 import logging
 import time
+import traceback
+
 from android.storage import app_storage_path
 import pytz
 import requests
@@ -65,6 +67,8 @@ async def get_weather(lat: float, long: float):
         return data
 
     except Exception as e:
+        logging.error("An error occurred: %s", str(e))
+        logging.error("Traceback:\n%s", traceback.format_exc())
         return e
 
 
