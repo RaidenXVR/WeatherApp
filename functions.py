@@ -88,17 +88,15 @@ async def get_location():
     app_path = app_storage_path()+"/app"
     def on_location(**kwargs):
         nonlocal gps_location
+        logging.warning(kwargs)
         gps_location = kwargs
     try:
         gps.configure(on_location=on_location)
         gps.start()
-        time.sleep(0.2)
-        logging.info(str(gps_location))
     except Exception as e:
         logging.error(e)
         return e
-    finally:
-        gps.stop()
+
     logging.info(str(gps_location))
     lat = gps.location.get("lat")
     lon = gps.location.get("lon")
