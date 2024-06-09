@@ -94,12 +94,13 @@ async def get_location():
         gps.configure(on_location=on_location)
         gps.start()
         time.sleep(0.2)
+        logging.info(str(gps_location))
     except Exception as e:
         logging.error(e)
         return e
     finally:
         gps.stop()
-
+    logging.info(str(gps_location))
     lat = gps.location.get("lat")
     lon = gps.location.get("lon")
 
