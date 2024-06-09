@@ -85,24 +85,23 @@ def utc_to_gmt_7(utc_time_str):
 
 async def get_location():
     gps_location = {}
-
+    location_event = asyncio.Event()
     app_path = app_storage_path()+"/app"
     def on_location(**kwargs):
         nonlocal gps_location
-        logging.warning(kwargs)
         gps_location = kwargs
-        logging.warning(gps_location)
+        location_event.set()
     try:
         gps.configure(on_location=on_location)
         gps.start()
 
-        await asyncio.sleep(1)
+        await location_event.wait()
 
     except Exception as e:
         logging.error(e)
         return e
 
-    logging.info(str(gps_location))
+    logging.warning(str(gps_location))
     lat = gps.location.get("lat")
     lon = gps.location.get("lon")
 
