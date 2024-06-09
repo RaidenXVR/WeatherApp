@@ -83,10 +83,15 @@ def utc_to_gmt_7(utc_time_str):
     return gmt7_time.hour
 
 async def get_location():
-    app_path = app_storage_path()+"/app"
+    global gps_location
 
+    app_path = app_storage_path()+"/app"
+    def on_location(**kwargs):
+        global gps_location
+        gps_location = '\n'.join([
+            '{}={}'.format(k, v) for k, v in kwargs.items()])
     try:
-        gps.configure(on_location=lambda **kwargs: print(kwargs))
+        gps.configure(on_location=on_location)
         gps.start()
         time.sleep(0.2)
     except Exception as e:
@@ -97,6 +102,7 @@ async def get_location():
 
     lat = gps.location.get("lat")
     lon = gps.location.get("lon")
+
     config_dict = config.get_default_config_for_subscription_type('developer')
 
     dv.load_dotenv(dotenv_path=os.path.join(app_path, "tkowm"))

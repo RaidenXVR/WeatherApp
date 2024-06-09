@@ -332,19 +332,10 @@ class WeatherApp(MDApp):
         """
         from android.permissions import request_permissions, Permission
 
-        def callback(permissions, results):
-            """
-            Defines the callback to be fired when runtime permission
-            has been granted or denied. This is not strictly required,
-            but added for the sake of completeness.
-            """
-            if all([res for res in results]):
-                print("callback. All permissions granted.")
-            else:
-                print("callback. Some permissions refused.")
+
 
         request_permissions([Permission.ACCESS_COARSE_LOCATION,
-                             Permission.ACCESS_FINE_LOCATION], callback)
+                             Permission.ACCESS_FINE_LOCATION])
         # # To request permissions without a callback, do:
         # request_permissions([Permission.ACCESS_COARSE_LOCATION,
         #                      Permission.ACCESS_FINE_LOCATION])
@@ -524,15 +515,10 @@ class CityListScreen(Screen):
 
             dialog = MDDialog(text="Cannot Use GPS. Please Add City Manually.", buttons=[
                 MDFlatButton(
-                    text="Cancel",
-                    on_release=lambda x: self.app_obj.stop()
-                ),
-                MDFlatButton(
-                    text="Add City",
+                    text="OK",
+                    on_release=lambda x: dialog.dismiss()
                 ),
             ])
-            dialog.buttons[1].bind(on_release=lambda x: self.app_obj.change_screen("cities"))
-            dialog.buttons[1].bind(on_release=lambda x: dialog.dismiss())
             dialog.open()
 
             return
