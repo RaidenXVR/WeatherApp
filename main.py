@@ -43,7 +43,7 @@ class WeatherApp(MDApp):
         return screen
 
     async def show_details(self):
-        app_path = app_storage_path() +"app"
+        app_path = app_storage_path() +"/app"
         try:
             with open(os.path.join(app_path, "UserData.json"), "r") as d:
                 datas = json.load(d)
@@ -95,7 +95,7 @@ class WeatherApp(MDApp):
         pass
 
     def update_items_list(self):
-        app_path = app_storage_path() +"app"
+        app_path = app_storage_path() +"/app"
 
 
         try:
@@ -142,7 +142,7 @@ class WeatherApp(MDApp):
 
     async def update_weather(self):
 
-        app_path = app_storage_path() +"app"
+        app_path = app_storage_path() +"/app"
         user_data={}
         try:
             with open(os.path.join(app_path, "UserData.json"), "r") as n:
@@ -235,7 +235,7 @@ class WeatherApp(MDApp):
         self.update_items_list()
 
     def del_trigger_on(self):
-        app_path = app_storage_path() +"app"
+        app_path = app_storage_path() +"/app"
         screen = [obj for obj in self.root.screens if obj.__class__.__name__ == "HomeScreen"][0]
         if not self.del_trig:
 
@@ -425,7 +425,7 @@ class CityListScreen(Screen):
         """
         app: WeatherApp = WeatherApp().get_running_app()
 
-        app_path = app_storage_path() + "app"
+        app_path = app_storage_path() + "/app"
         with open(os.path.join(app_path, "cities.json"), "r") as j:
             cities_json = json.load(j)
 
@@ -447,7 +447,7 @@ class CityListScreen(Screen):
 
         asyncio.run(self.app_obj.update_weather())
 
-        app_path = app_storage_path() + "app"
+        app_path = app_storage_path() + "/app"
         # api implementation here...
         # city_value: {"lat": latitude, "long": longitude}
         lat = float(city_value["lat"])
@@ -489,7 +489,7 @@ class CityListScreen(Screen):
         Function to add city to Home and Weather, then saving it to a JSON file.
         :return:
         """
-        app_path = app_storage_path()+"app"
+        app_path = app_storage_path()+"/app"
         # api implementation here...
         # city_value: {"lat": latitude, "long": longitude}
 
@@ -531,7 +531,7 @@ class CityListScreen(Screen):
         :return:
         """
 
-        app_path = app_storage_path()+"app"
+        app_path = app_storage_path()+"/app"
 
         with open(os.path.join(app_path, "cities.json"), "r") as j:
             cities_json = json.load(j)
@@ -601,8 +601,6 @@ class SwipeItem(MDSwiperItem):
         date = MDLabel(text=datetime.today().strftime("%d %B %Y"), pos_hint={"center_x": 0.5, "center_y": 0.7})
         date.adaptive_size = True
         date.adaptive_width = True
-
-        app = WeatherApp.get_running_app()
 
         details = MDCard(pos_hint={"center_x": 0.5, "center_y": 0.5}, md_bg_color=[1, 1, 1, 1], size_hint=[1, 0.15])
         grid = MDGridLayout(cols=5, padding="10dp", spacing="2dp")
@@ -707,7 +705,7 @@ class CheckboxLeftWidget(IRightBodyTouch, MDCheckbox):
 
 
 if __name__ == "__main__":
-    app_path = app_storage_path()+"app"
+    app_path = app_storage_path()+"/app"
 
 
     sm = ScreenManager()
