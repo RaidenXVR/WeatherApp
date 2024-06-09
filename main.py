@@ -455,7 +455,6 @@ class CityListScreen(Screen):
         lat = float(city_value["lat"])
         long = float(city_value["long"])
         try:
-
             city_weather = asyncio.run(get_weather(lat, long))
         except Exception as e:
             dialog = MDDialog(text=f"Something is Wrong:{e}", buttons=[
@@ -476,13 +475,35 @@ class CityListScreen(Screen):
         try:
             with open(os.path.join(app_path, "UserData.json"), "r") as j:
                 datas: dict = json.load(j)
-        except FileNotFoundError:
-            datas={"saved_cities":{}, "last_update": None}
-        datas["saved_cities"][city] = city_weather
-        datas["last_update"] = datetime.now().isoformat()
+            datas["saved_cities"][city] = city_weather
+            datas["last_update"] = datetime.now().isoformat()
+            with open(os.path.join(app_path, "UserData.json"), "w") as j:
+                json.dump(datas, j, indent=4)
 
-        with open(os.path.join(app_path, "UserData.json"), "w") as j:
-            json.dump(datas, j, indent=4)
+        except FileNotFoundError:
+            datas= {"saved_cities": {}, "last_update": None}
+            datas["saved_cities"][city] = city_weather
+            datas["last_update"] = datetime.now().isoformat()
+            try:
+                with open(os.path.join(app_path, "UserData.json"), "w") as j:
+                    json.dump(datas, j, indent=4)
+            except Exception as e:
+                dialog = MDDialog(text=f"Something is Wrong:{e}", buttons=[
+                    MDFlatButton(
+                        text="Cancel",
+                        theme_text_color="Custom",
+                        on_release=lambda x: self.stop()
+                    ),
+                    MDFlatButton(
+                        text="Retry",
+                        theme_text_color="Custom",
+                        on_release=lambda x: self.change_screen("cities")
+                    ),
+                ])
+                dialog.open()
+
+                return
+
 
         self.back_to_menu(self.app_obj)
 

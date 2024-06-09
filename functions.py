@@ -19,6 +19,7 @@ from plyer import gps
 async def get_weather(lat: float, long: float):
     try:
         app_path = app_storage_path()+"/app"
+        logging.warning(os.listdir(app_path))
         dv.load_dotenv()
         tk = dv.get_key(os.path.join(app_path, ".env"), "WEATHER")
 
