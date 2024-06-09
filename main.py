@@ -43,7 +43,7 @@ class WeatherApp(MDApp):
         return screen
 
     async def show_details(self):
-        app_path = app_storage_path()
+        app_path = app_storage_path() +"app"
         try:
             with open(os.path.join(app_path, "UserData.json"), "r") as d:
                 datas = json.load(d)
@@ -95,7 +95,7 @@ class WeatherApp(MDApp):
         pass
 
     def update_items_list(self):
-        app_path = app_storage_path()
+        app_path = app_storage_path() +"app"
 
 
         try:
@@ -113,7 +113,7 @@ class WeatherApp(MDApp):
         for key in datas["saved_cities"].keys():
             data = datas["saved_cities"][key]
 
-            icn = ImageRightWidget(source=f"./images/{data['current']['icon']}.png", size=(200, 200),
+            icn = ImageRightWidget(source=os.path.join(app_path,"images/{data['current']['icon']}.png"), size=(200, 200),
                                    size_hint=[None, None], padding=[0, "20dp", 0, 0])
             city = ThreeLineRightIconListItem(text=f"{data['current']['temp']}°C",
                                               secondary_text=key,
@@ -142,7 +142,7 @@ class WeatherApp(MDApp):
 
     async def update_weather(self):
 
-        app_path = app_storage_path()
+        app_path = app_storage_path() +"app"
         user_data={}
         try:
             with open(os.path.join(app_path, "UserData.json"), "r") as n:
@@ -235,7 +235,7 @@ class WeatherApp(MDApp):
         self.update_items_list()
 
     def del_trigger_on(self):
-        app_path = app_storage_path()
+        app_path = app_storage_path() +"app"
         screen = [obj for obj in self.root.screens if obj.__class__.__name__ == "HomeScreen"][0]
         if not self.del_trig:
 
@@ -371,14 +371,14 @@ class HomeScreen(Screen):
             app_obj.theme_cls.theme_style = "Dark"
             with self.canvas.before:
                 Rectangle(pos=self.pos, size=self.size,
-                          source="./images/home_bg_dm.png")
+                          source=os.path.join(app_storage_path(),'app',"images/home_bg_dm.png"))
 
             self.ids.theme_button.icon = "weather-sunny"
         else:
             app_obj.theme_cls.theme_style = "Light"
             with self.canvas.before:
                 Rectangle(pos=self.pos, size=self.size,
-                          source="./images/home_bg_lm.png")
+                          source=os.path.join(app_storage_path(),'app',"images/home_bg_lm.png"))
 
             self.ids.theme_button.icon = "moon-waxing-crescent"
 
@@ -386,8 +386,8 @@ class HomeScreen(Screen):
 
 
 class WeatherScreen(Screen):
-    bg_image = "./images/morning.png"
-    images = ["./images/morning.png", "./images/noon.png", "./images/evening.png"]
+    bg_image = os.path.join(app_storage_path(),'app',"images/morning.png")
+    images = [os.path.join(app_storage_path(),'app',"images/morning.png"),os.path.join(app_storage_path(),'app',"images/noon.png"),os.path.join(app_storage_path(),'app',"images/evening.png")]
     current_index = 0
 
     def reload(self, app):
@@ -425,7 +425,7 @@ class CityListScreen(Screen):
         """
         app: WeatherApp = WeatherApp().get_running_app()
 
-        app_path = app_storage_path()
+        app_path = app_storage_path() + "app"
         with open(os.path.join(app_path, "cities.json"), "r") as j:
             cities_json = json.load(j)
 
@@ -447,7 +447,7 @@ class CityListScreen(Screen):
 
         asyncio.run(self.app_obj.update_weather())
 
-        app_path = app_storage_path()
+        app_path = app_storage_path() + "app"
         # api implementation here...
         # city_value: {"lat": latitude, "long": longitude}
         lat = float(city_value["lat"])
@@ -489,7 +489,7 @@ class CityListScreen(Screen):
         Function to add city to Home and Weather, then saving it to a JSON file.
         :return:
         """
-        app_path = app_storage_path()
+        app_path = app_storage_path()+"app"
         # api implementation here...
         # city_value: {"lat": latitude, "long": longitude}
 
@@ -531,7 +531,7 @@ class CityListScreen(Screen):
         :return:
         """
 
-        app_path = app_storage_path()
+        app_path = app_storage_path()+"app"
 
         with open(os.path.join(app_path, "cities.json"), "r") as j:
             cities_json = json.load(j)
@@ -707,7 +707,7 @@ class CheckboxLeftWidget(IRightBodyTouch, MDCheckbox):
 
 
 if __name__ == "__main__":
-    app_path = app_storage_path()
+    app_path = app_storage_path()+"app"
 
 
     sm = ScreenManager()
@@ -720,4 +720,3 @@ if __name__ == "__main__":
         WeatherApp().run()
     except Exception as e:
         logging.error(str(e))
-        logging.warning(app_path)
