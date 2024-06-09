@@ -94,7 +94,7 @@ async def get_location():
         gps.configure(on_location=on_location)
         gps.start()
 
-        await asyncio.wait(3)
+        await asyncio.sleep(3)
 
     except Exception as e:
         logging.error(e)
