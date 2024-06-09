@@ -4,8 +4,6 @@ import logging
 import time
 import traceback
 
-from concurrent.futures import ThreadPoolExecutor
-
 from android.storage import app_storage_path
 import pytz
 import requests
@@ -21,9 +19,9 @@ from plyer import gps
 
 async def get_weather(lat: float, long: float):
     try:
-        app_path = app_storage_path()+"/app"
+        app_path = app_storage_path() + "/app"
         logging.warning(os.listdir(app_path))
-        dv.load_dotenv(dotenv_path=os.path.join(app_path,"tkowm"))
+        dv.load_dotenv(dotenv_path=os.path.join(app_path, "tkowm"))
         tk = dv.get_key(os.path.join(app_path, "tkowm"), "WEATHER")
 
         owm = OWM(tk)
@@ -44,7 +42,6 @@ async def get_weather(lat: float, long: float):
         uv = current.uvi
         wind = str(current.wind()["speed"])
 
-
         forecast_data = {}
         for item in forecast:
             time = utc_to_gmt_7(item["dt_txt"])
@@ -63,8 +60,8 @@ async def get_weather(lat: float, long: float):
                             "temp": temp,
                             "hum": hum,
                             "icon": wth,
-                            "uv":uv,
-                            "wind":wind
+                            "uv": uv,
+                            "wind": wind
                             }
             , "forecast": forecast_data}
 
@@ -85,35 +82,26 @@ def utc_to_gmt_7(utc_time_str):
     gmt7_time = utc_time.astimezone(gmt7_timezone)
     return gmt7_time.hour
 
+
 async def get_location():
     gps_location = {}
-    location_event = asyncio.Event()  # Create an event object
-    loop = asyncio.get_running_loop()
-
+    location_event = asyncio.Event()
     app_path = app_storage_path() + "/app"
 
     def on_location(**kwargs):
         nonlocal gps_location
         gps_location = kwargs
-        logging.warning(gps_location)
-        location_event.set()  # Signal that the location has been updated
+        location_event.set()
 
-    def start_gps():
-        try:
-            gps.configure(on_location=on_location)
-            gps.start()
-        except Exception as e:
-            logging.error(e)
+    try:
+        gps.configure(on_location=on_location)
+        gps.start()
 
-    with ThreadPoolExecutor() as executor:
-        await loop.run_in_executor(executor, start_gps)
+        time.sleep(2)
 
-        # Wait until the location_event is set by the on_location callback
-        await location_event.wait()
-
-        logging.info(str(gps_location))
-
-    gps.stop()
+    except Exception as e:
+        logging.error(e)
+        return e
 
     logging.warning(str(gps_location))
     lat = gps_location.get("lat")
@@ -122,16 +110,16 @@ async def get_location():
     config_dict = config.get_default_config_for_subscription_type('developer')
 
     dv.load_dotenv(dotenv_path=os.path.join(app_path, "tkowm"))
-    tk = dv.get_key(os.path.join(app_path,"tkowm"), "WEATHER")
+    tk = dv.get_key(os.path.join(app_path, "tkowm"), "WEATHER")
     owm = OWM(api_key=tk, config=config_dict)
     manager = owm.weather_manager()
 
     observe: Observation = manager.weather_at_coords(lat, lon)
-    name:str = observe.location.name
-    with open(os.path.join(app_path,"cities.json"), "r") as c:
-        cities_name= json.load(c)
+    name: str = observe.location.name
+    with open(os.path.join(app_path, "cities.json"), "r") as c:
+        cities_name = json.load(c)
     if name not in cities_name.keys():
         name2 = name.split(" ")
         if name2[0] in cities_name.keys():
-            return name2[0],lat,lon
-    return name,lat,lon
+            return name2[0], lat, lon
+    return name, lat, lon
