@@ -83,11 +83,11 @@ def utc_to_gmt_7(utc_time_str):
     return gmt7_time.hour
 
 async def get_location():
-    global gps_location
+    gps_location = ""
 
     app_path = app_storage_path()+"/app"
     def on_location(**kwargs):
-        global gps_location
+        nonlocal gps_location
         gps_location = '\n'.join([
             '{}={}'.format(k, v) for k, v in kwargs.items()])
     try:
