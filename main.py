@@ -2,6 +2,8 @@ import asyncio
 import json
 import logging
 import os
+import traceback
+
 from android.storage import app_storage_path
 
 from datetime import datetime, timedelta
@@ -717,4 +719,5 @@ if __name__ == "__main__":
     try:
         WeatherApp().run()
     except Exception as e:
-        logging.error(str(e))
+        logging.error("An error occurred: %s", str(e))
+        logging.error("Traceback:\n%s", traceback.format_exc())
