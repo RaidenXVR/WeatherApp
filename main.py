@@ -115,7 +115,7 @@ class WeatherApp(MDApp):
         for key in datas["saved_cities"].keys():
             data = datas["saved_cities"][key]
 
-            icn = ImageRightWidget(source=os.path.join(app_path,"images/{data['current']['icon']}.png"), size=(200, 200),
+            icn = ImageRightWidget(source=os.path.join(app_path,f"images/{data['current']['icon']}.png"), size=(200, 200),
                                    size_hint=[None, None], padding=[0, "20dp", 0, 0])
             city = ThreeLineRightIconListItem(text=f"{data['current']['temp']}°C",
                                               secondary_text=key,
