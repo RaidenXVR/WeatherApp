@@ -3,7 +3,6 @@ import json
 import logging
 import time
 import traceback
-from concurrent.futures import ThreadPoolExecutor
 
 from android.storage import app_storage_path
 import pytz
@@ -86,34 +85,21 @@ def utc_to_gmt_7(utc_time_str):
 
 async def get_location():
     gps_location = {}
-    location_event = asyncio.Event()  # Create an event object
-    loop = asyncio.get_running_loop()
-
     app_path = app_storage_path() + "/app"
 
-    def on_location(**kwargs):
+    async def on_location(**kwargs):
         nonlocal gps_location
-        logging.warning(kwargs)
         gps_location = kwargs
         logging.warning(gps_location)
-        location_event.set()  # Signal that the location has been updated
+    try:
+        gps.configure(on_location=on_location)
+        gps.start()
 
-    def start_gps():
-        try:
-            gps.configure(on_location=on_location)
-            gps.start()
-        except Exception as e:
-            logging.error(e)
+        await asyncio.wait(3)
 
-    with ThreadPoolExecutor() as executor:
-        await loop.run_in_executor(executor, start_gps)
-
-        # Wait until the location_event is set by the on_location callback
-        await location_event.wait()
-
-        logging.info(str(gps_location))
-        gps.stop()
-
+    except Exception as e:
+        logging.error(e)
+        return e
 
     logging.warning(str(gps_location))
     lat = gps_location.get("lat")
