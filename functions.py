@@ -87,7 +87,7 @@ async def get_location():
     gps_location = {}
     app_path = app_storage_path() + "/app"
 
-    async def on_location(**kwargs):
+    def on_location(**kwargs):
         nonlocal gps_location
         gps_location = kwargs
         logging.warning(gps_location)
