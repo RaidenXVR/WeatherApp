@@ -90,7 +90,6 @@ async def get_location():
     def on_location(**kwargs):
         nonlocal gps_location
         gps_location = kwargs
-        logging.warning(gps_location)
     try:
         gps.configure(on_location=on_location)
         gps.start()
@@ -101,9 +100,14 @@ async def get_location():
         logging.error(e)
         return e
 
+    finally:
+        gps.stop()
+
     logging.warning(str(gps_location))
+
     lat = gps_location.get("lat")
     lon = gps_location.get("lon")
+    logging.info(f"lat: {lat}, lon: {lon}")
 
     config_dict = config.get_default_config_for_subscription_type('developer')
 
