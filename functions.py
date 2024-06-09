@@ -1,3 +1,4 @@
+import asyncio
 import json
 import logging
 import time
@@ -90,9 +91,13 @@ async def get_location():
         nonlocal gps_location
         logging.warning(kwargs)
         gps_location = kwargs
+        logging.warning(gps_location)
     try:
         gps.configure(on_location=on_location)
         gps.start()
+
+        await asyncio.sleep(1)
+
     except Exception as e:
         logging.error(e)
         return e
