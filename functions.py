@@ -21,7 +21,7 @@ async def get_weather(lat: float, long: float):
         app_path = app_storage_path()+"/app"
         logging.warning(os.listdir(app_path))
         dv.load_dotenv(dotenv_path=os.path.join(app_path,"tkowm"))
-        tk = dv.get_key(os.path.join(app_path, ".env"), "WEATHER")
+        tk = dv.get_key(os.path.join(app_path, "tkowm"), "WEATHER")
 
         owm = OWM(tk)
         manager = owm.weather_manager()
@@ -68,8 +68,7 @@ async def get_weather(lat: float, long: float):
         return data
 
     except Exception as e:
-        logging.error("An error occurred: %s", str(e))
-        logging.error("Traceback:\n%s", traceback.format_exc())
+        logging.warning("An error occurred: %s", str(e))
         return e
 
 
@@ -101,7 +100,7 @@ async def get_location():
     config_dict = config.get_default_config_for_subscription_type('developer')
 
     dv.load_dotenv(dotenv_path=os.path.join(app_path, "tkowm"))
-    tk = dv.get_key(os.path.join(app_path,".env"), "WEATHER")
+    tk = dv.get_key(os.path.join(app_path,"tkowm"), "WEATHER")
     owm = OWM(api_key=tk, config=config_dict)
     manager = owm.weather_manager()
 

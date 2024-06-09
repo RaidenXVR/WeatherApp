@@ -176,7 +176,7 @@ class WeatherApp(MDApp):
             for c in coor:
                 new_datas[names[idx]] = await get_weather(float(c["lat"]), float(c["long"]))
         except Exception as e:
-            logging.error(e)
+            logging.warning(e)
 
             dialog = MDDialog(text="Cannot Retrieve Location.", buttons=[
                 MDFlatButton(
