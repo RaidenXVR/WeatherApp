@@ -16,7 +16,7 @@ from plyer import gps
 
 async def get_weather(lat: float, long: float):
     try:
-        app_path = app_storage_path()
+        app_path = app_storage_path()+"/app"
         dv.load_dotenv()
         tk = dv.get_key(os.path.join(app_path, ".env"), "WEATHER")
 
@@ -79,7 +79,7 @@ def utc_to_gmt_7(utc_time_str):
     return gmt7_time.hour
 
 async def get_location():
-    app_path = app_storage_path()
+    app_path = app_storage_path()+"/app"
 
     try:
         gps.configure(on_location=lambda **kwargs: print(kwargs))
