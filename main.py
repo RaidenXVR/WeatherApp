@@ -709,6 +709,7 @@ class CheckboxLeftWidget(IRightBodyTouch, MDCheckbox):
 if __name__ == "__main__":
     app_path = app_storage_path()
 
+
     sm = ScreenManager()
 
     sm.add_widget(WeatherScreen(name='weather'))
@@ -718,4 +719,5 @@ if __name__ == "__main__":
     try:
         WeatherApp().run()
     except Exception as e:
-        logging.error(str(e.__cause__))
+        logging.error(str(e))
+        logging.warning(app_path)
