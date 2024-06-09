@@ -113,7 +113,9 @@ async def get_location():
     manager = owm.weather_manager()
 
     observe: Observation = manager.weather_at_coords(lat, lon)
+    logging.info(f"lat: {lat}, lon: {lon}")
     name: str = observe.location.name
+    logging.info(f"city: {name}")
     with open(os.path.join(app_path, "cities.json"), "r") as c:
         cities_name = json.load(c)
     if name not in cities_name.keys():
