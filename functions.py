@@ -4,7 +4,6 @@ import logging
 import time
 import traceback
 
-from android.storage import app_storage_path
 import pytz
 import requests
 from pyowm import OWM
@@ -15,11 +14,18 @@ from pyowm.weatherapi25.weather import Weather
 from pyowm.utils import config
 from datetime import datetime, timedelta
 from plyer import gps
+from plyer.utils import platform
+if platform == "android":
+    from android.storage import app_storage_path
 
-
+def app_storage_path():
+    if platform == "android":
+        return app_storage_path()+"/app"
+    else:
+        return "."
 async def get_weather(lat: float, long: float):
     try:
-        app_path = app_storage_path() + "/app"
+        app_path = app_storage_path()
         logging.warning(os.listdir(app_path))
         dv.load_dotenv(dotenv_path=os.path.join(app_path, "tkowm"))
         tk = dv.get_key(os.path.join(app_path, "tkowm"), "WEATHER")
@@ -85,7 +91,7 @@ def utc_to_gmt_7(utc_time_str):
 
 async def get_location():
     gps_location = {}
-    app_path = app_storage_path() + "/app"
+    app_path = app_storage_path()
 
     def on_location(**kwargs):
         nonlocal gps_location

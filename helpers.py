@@ -1,7 +1,8 @@
 menu_helper = """
 #: import MDTextField kivymd.uix.textfield.MDTextField
 #: import asyncio asyncio
-#: import app_storage_path android.storage.app_storage_path
+# # : import functions.app_storage_path android.storage.functions.app_storage_path
+#: import functions functions
 #: import os os
 ScreenManager:
     WeatherScreen:
@@ -16,7 +17,7 @@ ScreenManager:
         Rectangle:
             pos: self.pos
             size: self.size
-            source: os.path.join(app_storage_path(),"app","images/home_bg_lm.png") if app.theme_cls.theme_style == "Light" else os.path.join(app_storage_path(),"app","images/home_bg_dm.png")
+            source: os.path.join(functions.app_storage_path(),"images/home_bg_lm.png") if app.theme_cls.theme_style == "Light" else os.path.join(functions.app_storage_path(),"images/home_bg_dm.png")
     MDIconButton:
         id: back_butt
         md_bg_color: [244/255,249/255,249/255,0.7] if app.theme_cls.theme_style == "Light" else [7/255,37/255,65/255,0.7]
@@ -118,7 +119,7 @@ ScreenManager:
             Rectangle:
                 pos: self.pos
                 size: self.size
-                source: os.path.join(app_storage_path(),"app","images/home_bg_lm.png") if app.theme_cls.theme_style == "Light" else os.path.join(app_storage_path(),"app","images/home_bg_dm.png")
+                source: os.path.join(functions.app_storage_path(),"images/home_bg_lm.png") if app.theme_cls.theme_style == "Light" else os.path.join(functions.app_storage_path(),"images/home_bg_dm.png")
                 
         size_hint: 1,1
         orientation: 'vertical'

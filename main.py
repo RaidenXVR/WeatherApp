@@ -4,34 +4,33 @@ import logging
 import os
 import traceback
 
-from android.storage import app_storage_path
-
 from datetime import datetime, timedelta
 from json import JSONDecodeError
 
 from kivy.animation import Animation
-from kivy.metrics import sp
 from kivymd.app import MDApp
 from kivymd.uix.boxlayout import MDBoxLayout
-from kivymd.uix.button import MDFlatButton, MDIconButton
+from kivymd.uix.button import MDFlatButton
 from kivymd.uix.card import MDCard, MDSeparator
 from kivymd.uix.dialog import MDDialog
 from kivymd.uix.gridlayout import MDGridLayout
 from kivymd.uix.label import MDLabel, MDIcon
-from kivymd.uix.list import ThreeLineRightIconListItem, OneLineListItem, ImageRightWidget, ILeftBody, IRightBodyTouch
+from kivymd.uix.list import ThreeLineRightIconListItem, OneLineListItem, ImageRightWidget, IRightBodyTouch
 from kivy.lang import Builder
 from kivymd.uix.relativelayout import MDRelativeLayout
 from kivymd.uix.swiper import MDSwiperItem
 from kivymd.uix.selectioncontrol import MDCheckbox
-from plyer import gps
 from plyer.utils import platform
 
+import functions
 from helpers import menu_helper
 from kivy.core.window import Window
 from kivy.uix.screenmanager import Screen, ScreenManager
 from kivy.clock import Clock
 from kivy.graphics import *
 from functions import get_weather, get_location
+
+
 
 class WeatherApp(MDApp):
     del_trig = False
@@ -45,7 +44,7 @@ class WeatherApp(MDApp):
         return screen
 
     async def show_details(self):
-        app_path = app_storage_path() +"/app"
+        app_path = functions.app_storage_path()
         try:
             with open(os.path.join(app_path, "UserData.json"), "r") as d:
                 datas = json.load(d)
@@ -91,7 +90,7 @@ class WeatherApp(MDApp):
         pass
 
     def update_items_list(self):
-        app_path = app_storage_path() +"/app"
+        app_path = functions.app_storage_path()
 
 
         try:
@@ -138,7 +137,7 @@ class WeatherApp(MDApp):
 
     async def update_weather(self):
 
-        app_path = app_storage_path() +"/app"
+        app_path = functions.app_storage_path()
         user_data={}
         try:
             with open(os.path.join(app_path, "UserData.json"), "r") as n:
@@ -231,7 +230,7 @@ class WeatherApp(MDApp):
         self.update_items_list()
 
     def del_trigger_on(self):
-        app_path = app_storage_path() +"/app"
+        app_path = functions.app_storage_path()
         screen = [obj for obj in self.root.screens if obj.__class__.__name__ == "HomeScreen"][0]
         if not self.del_trig:
 
@@ -324,7 +323,8 @@ class WeatherApp(MDApp):
         The request will produce a popup if permissions have not already been
         been granted, otherwise it will do nothing.
         """
-        from android.permissions import request_permissions, Permission
+        if platform == "android":
+           from android.permissions import request_permissions, Permission
 
 
 
@@ -358,14 +358,14 @@ class HomeScreen(Screen):
             app_obj.theme_cls.theme_style = "Dark"
             with self.canvas.before:
                 Rectangle(pos=self.pos, size=self.size,
-                          source=os.path.join(app_storage_path(),'app',"images/home_bg_dm.png"))
+                          source=os.path.join(functions.app_storage_path(),"images/home_bg_dm.png"))
 
             self.ids.theme_button.icon = "weather-sunny"
         else:
             app_obj.theme_cls.theme_style = "Light"
             with self.canvas.before:
                 Rectangle(pos=self.pos, size=self.size,
-                          source=os.path.join(app_storage_path(),'app',"images/home_bg_lm.png"))
+                          source=os.path.join(functions.app_storage_path(),"images/home_bg_lm.png"))
 
             self.ids.theme_button.icon = "moon-waxing-crescent"
 
@@ -373,8 +373,8 @@ class HomeScreen(Screen):
 
 
 class WeatherScreen(Screen):
-    bg_image = os.path.join(app_storage_path(),'app',"images/morning.png")
-    images = [os.path.join(app_storage_path(),'app',"images/morning.png"),os.path.join(app_storage_path(),'app',"images/noon.png"),os.path.join(app_storage_path(),'app',"images/evening.png")]
+    bg_image = os.path.join(functions.app_storage_path(),"images/morning.png")
+    images = [os.path.join(functions.app_storage_path(),"images/morning.png"),os.path.join(functions.app_storage_path(),"images/noon.png"),os.path.join(functions.app_storage_path(),"images/evening.png")]
     current_index = 0
 
     def reload(self, app):
@@ -410,14 +410,12 @@ class CityListScreen(Screen):
         Function to update the List of City upon entering the search functionality. Called automatically on enter.
         :return:
         """
-        app: WeatherApp = WeatherApp().get_running_app()
 
-        app_path = app_storage_path() + "/app"
+        app_path = functions.app_storage_path()
         with open(os.path.join(app_path, "cities.json"), "r") as j:
             cities_json = json.load(j)
 
         cities = list(cities_json.keys())[:40]
-
         for city in cities:
             item = OneLineListItem(text=city, on_release=lambda x, city_=city: self.add_city(
                 city_, cities_json[city_]))
@@ -434,7 +432,7 @@ class CityListScreen(Screen):
 
         asyncio.run(self.app_obj.update_weather())
 
-        app_path = app_storage_path() + "/app"
+        app_path = functions.app_storage_path()
         # api implementation here...
         # city_value: {"lat": latitude, "long": longitude}
         lat = float(city_value["lat"])
@@ -497,7 +495,7 @@ class CityListScreen(Screen):
         Function to add city to Home and Weather, then saving it to a JSON file.
         :return:
         """
-        app_path = app_storage_path()+"/app"
+        app_path = functions.app_storage_path()
         # api implementation here...
         # city_value: {"lat": latitude, "long": longitude}
 
@@ -534,7 +532,7 @@ class CityListScreen(Screen):
         :return:
         """
 
-        app_path = app_storage_path()+"/app"
+        app_path = functions.app_storage_path()
 
         with open(os.path.join(app_path, "cities.json"), "r") as j:
             cities_json = json.load(j)
@@ -708,11 +706,14 @@ class CheckboxLeftWidget(IRightBodyTouch, MDCheckbox):
 
 
 if __name__ == "__main__":
-    app_path = app_storage_path()+"/app"
-
+    app_path = functions.app_storage_path()
 
     sm = ScreenManager()
-
+    if platform != "android":
+        Window.size = (300,500)
+    else:
+        # from android.storage import app_storage_path
+        pass
     sm.add_widget(WeatherScreen(name='weather'))
 
     sm.add_widget(HomeScreen(name='home'))
@@ -722,3 +723,5 @@ if __name__ == "__main__":
     except Exception as e:
         logging.error("An error occurred: %s", str(e))
         logging.error("Traceback:\n%s", traceback.format_exc())
+    except JSONDecodeError as e:
+        os.remove(os.path.join(app_path,"UserData.json"))
