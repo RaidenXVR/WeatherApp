@@ -170,3 +170,38 @@ ScreenManager:
 
             
 """
+
+get_saved_cities_current_data_query = """select * from SavedWeatherData;"""
+
+get_saved_cities_forecast_data_query = """select swd.city_name, fw.* 
+from SavedWeatherData as swd
+inner join ForecastWeathers as fw on swd.city_name = fw.city_name;
+"""
+
+insert_current_data_query = """INSERT INTO SavedWeatherData (city_name, weather, weather_desc, temp, hum, icon, uv, wind)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+ON CONFLICT(city_name) DO UPDATE SET
+    weather = excluded.weather,
+    weather_desc = excluded.weather_desc,
+    temp = excluded.temp,
+    hum = excluded.hum,
+    icon = excluded.icon,
+    uv = excluded.uv,
+    wind = excluded.wind;
+"""
+
+delete_saved_city_queries = ["""Delete from SavedWeatherData where city_name = ?
+""",
+                             """Delete from ForecastWeathers where city_name = ?
+                             """]
+
+delete_forecast_query = """Delete from ForecastWeathers where city_name = ?
+                     """
+
+insert_forecast_query = """INSERT INTO ForecastWeathers (forecast_hour, weather, weather_desc, temp, icon, city_name)
+    VALUES (?, ?, ?, ?, ?, ?) 
+"""
+
+delete_last_up="""delete from LastUpdate"""
+update_last_up = """insert into LastUpdate (last_up) values ( ? )"""
+get_last_up = """select * from LastUpdate"""

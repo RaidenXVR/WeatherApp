@@ -23,13 +23,14 @@ from kivymd.uix.selectioncontrol import MDCheckbox
 from plyer.utils import platform
 
 import functions
+import helpers
 from helpers import menu_helper
 from kivy.core.window import Window
 from kivy.uix.screenmanager import Screen, ScreenManager
 from kivy.clock import Clock
 from kivy.graphics import *
 from functions import get_weather, get_location
-
+import sqlite3 as sq
 
 
 class WeatherApp(MDApp):
@@ -44,14 +45,8 @@ class WeatherApp(MDApp):
         return screen
 
     async def show_details(self):
-        app_path = functions.app_storage_path()
-        try:
-            with open(os.path.join(app_path, "UserData.json"), "r") as d:
-                datas = json.load(d)
+        if not cursor.execute("""select city_name from SavedWeatherData""").fetchall():
 
-        except FileNotFoundError:
-            logging.warning("Not found UserData.json: show_details")
-            datas = {"saved_cities": {}, "last_update": datetime.now().isoformat()}
             dialog = MDDialog(text="Please Add City In The Next Screen.", buttons=[
                 MDFlatButton(
                     text="Cancel",
@@ -64,22 +59,34 @@ class WeatherApp(MDApp):
 
                 ),
             ])
-            dialog.buttons[1].bind(on_release= lambda x: self.change_screen("cities"))
+            dialog.buttons[1].bind(on_release=lambda x: self.change_screen("cities"))
             dialog.buttons[1].bind(on_release=lambda x: dialog.dismiss())
             dialog.open()
 
             return
-        saved_cities = datas["saved_cities"]
+        else:
+            data_current = cursor.execute(helpers.get_saved_cities_current_data_query).fetchall()
+            data_forecast = cursor.execute(helpers.get_saved_cities_forecast_data_query).fetchall()
 
         screen = [obj for obj in self.root.screens if obj.__class__.__name__ == "WeatherScreen"][0]
         screen.ids.swiper_main.children[0].clear_widgets()
 
-        for city in saved_cities.keys():
-            city_datas = {"Now": saved_cities[city]["current"]}
-            for time_forecast in saved_cities[city]["forecast"]:
-                city_datas[time_forecast] = saved_cities[city]["forecast"][time_forecast]
+        for city in data_current:
+            print(city)
+            city_datas = {"Now": {"weather": city[1],
+                                  "weather_desc": city[2],
+                                  "temp": city[3],
+                                  "hum": city[4],
+                                  "icon": city[5],
+                                  "uv": city[6],
+                                  "wind": city[7]}}
+            for time_forecast in data_forecast:
+                city_datas[time_forecast[2]] = {"temp": time_forecast[5],
+                                 "weather": time_forecast[3],
+                                 "weather_desc": time_forecast[4],
+                                 "icon": time_forecast[6]}
 
-            swiper = SwipeItem(city=city, city_data=city_datas)
+            swiper = SwipeItem(city=city[0], city_data=city_datas)
 
             screen.ids.swiper_main.add_widget(swiper)
 
@@ -92,27 +99,24 @@ class WeatherApp(MDApp):
     def update_items_list(self):
         app_path = functions.app_storage_path()
 
-
-        try:
-            with open(os.path.join(app_path, "UserData.json"), "r") as j:
-                datas = json.load(j)
-        except FileNotFoundError as e:
+        if not cursor.execute("""select city_name from SavedWeatherData""").fetchall():
             dialog = MDDialog(text="Please add a city from the list or search for a city.",
                               buttons=[MDFlatButton(text="Ok", on_release=lambda x: dialog.dismiss())])
             dialog.open()
             self.change_screen("cities")
             return
+        else:
+            datas = cursor.execute(helpers.get_saved_cities_current_data_query).fetchall()
         screen = [obj for obj in self.root.screens if obj.__class__.__name__ == "HomeScreen"][0]
         screen.ids.list_container.clear_widgets()
 
-        for key in datas["saved_cities"].keys():
-            data = datas["saved_cities"][key]
-
-            icn = ImageRightWidget(source=os.path.join(app_path,f"images/{data['current']['icon']}.png"), size=(200, 200),
+        for data in datas:
+            icn = ImageRightWidget(source=os.path.join(app_path, f"images/{data[5]}.png"),
+                                   size=(200, 200),
                                    size_hint=[None, None], padding=[0, "20dp", 0, 0])
-            city = ThreeLineRightIconListItem(text=f"{data['current']['temp']}°C",
-                                              secondary_text=key,
-                                              tertiary_text=f"Humidity: {data['current']['hum']}%",
+            city = ThreeLineRightIconListItem(text=f"{data[3]}°C",
+                                              secondary_text=data[0],
+                                              tertiary_text=f"Humidity: {data[4]}%",
                                               on_release=lambda x: self.change_screen("weather"), divider='Inset',
                                               divider_color=[244 / 255, 249 / 255, 249 / 255, 0.7])
 
@@ -138,17 +142,15 @@ class WeatherApp(MDApp):
     async def update_weather(self):
 
         app_path = functions.app_storage_path()
-        user_data={}
-        try:
-            with open(os.path.join(app_path, "UserData.json"), "r") as n:
-                user_data = json.load(n)
-        except FileNotFoundError:
-            user_data["saved_cities"] ={}
-            user_data["last_update"] = None
-            with open(os.path.join(app_path,"UserData.json"), "w") as d:
-                json.dump(user_data, d)
-        names = list(user_data["saved_cities"].keys())
-        last_up = user_data["last_update"]
+        user_data = []
+
+        if not cursor.execute("""select * from LastUpdate""").fetchall() or \
+                not cursor.execute("""select city_name from SavedWeatherData""").fetchall():
+            user_data = cursor.execute(helpers.get_saved_cities_current_data_query)
+            last_up = None
+        else:
+            last_up = cursor.execute(helpers.get_last_up).fetchone()[0]
+        names = [x[0] for x in user_data]
 
         if last_up is not None:
             last_up = datetime.fromisoformat(last_up)
@@ -186,14 +188,34 @@ class WeatherApp(MDApp):
             dialog.open()
 
             return
-        with open(os.path.join(app_path, "UserData.json"), "r") as ds:
-            datas = json.load(ds)
 
-        datas["saved_cities"] = new_datas
-        datas["last_update"] = datetime.now().isoformat()
+        # datas["saved_cities"] = new_datas
+        for city in new_datas.keys():
+            current_data = new_datas[city]["current"]
+            forecast_data = new_datas[city]["forecast"]
+            #(city_name, weather, weather_desc, temp, hum, icon, wind, uv)
+            cursor.execute(helpers.insert_current_data_query, [city,
+                                                               current_data["weather"],
+                                                               current_data["weather_desc"],
+                                                               current_data["temp"],
+                                                               current_data["hum"],
+                                                               current_data["icon"],
+                                                               current_data["wind"],
+                                                               current_data["uv"]])
+            cursor.execute(helpers.delete_forecast_query, [city])
+            for hour in forecast_data.keys():
+                # (forecast_hour, weather, weather_desc, temp, icon, city_name)
+                cursor.execute(helpers.insert_forecast_query, [hour,
+                                                               forecast_data[hour]["weather"],
+                                                               forecast_data[hour]["weather_desc"],
+                                                               forecast_data[hour]["temp"],
+                                                               forecast_data[hour]["icon"],
+                                                               city])
+        cursor.execute(helpers.delete_last_up)
+        cursor.execute(helpers.update_last_up, [datetime.now().isoformat()])
 
-        with open(os.path.join(app_path, "UserData.json"), "w") as dt:
-            json.dump(datas, dt)
+        conn.commit()
+
 
         self.update_items_list()
 
@@ -247,16 +269,15 @@ class WeatherApp(MDApp):
 
             screen.ids.back_butt.disabled = False
 
-            with open(os.path.join(app_path, "UserData.json"), "r") as j:
-                datas = json.load(j)
-            for key in datas["saved_cities"].keys():
+            datas = cursor.execute(helpers.get_saved_cities_current_data_query).fetchall()
+            # (city_name, weather, weather_desc, temp, hum, icon, uv, wind)
+            for weather in datas:
                 checkbox = CheckboxLeftWidget(size=["48dp", "48dp"])
                 checkbox.bind(active=self.on_box_checked)
 
-                data = datas["saved_cities"][key]
-                city = ThreeLineRightIconListItem(text=f"{data['current']['temp']}°C",
-                                                  secondary_text=key,
-                                                  tertiary_text=f"Humidity: {data['current']['hum']}%",
+                city = ThreeLineRightIconListItem(text=f"{weather[3]}°C",
+                                                  secondary_text=weather[0],
+                                                  tertiary_text=f"Humidity: {weather[4]}%",
                                                   on_release=lambda x: self.change_screen("weather"), divider='Inset',
                                                   divider_color=[244 / 255, 249 / 255, 249 / 255, 0.7])
                 city.add_widget(checkbox)
@@ -274,26 +295,23 @@ class WeatherApp(MDApp):
             if len(self.checked_cities) == 0:
                 self.del_trigger_off()
                 return
-            with open(os.path.join(app_path, "UserData.json"), "r") as u:
-                datas: dict = json.load(u)
 
             for boxes in self.checked_cities:
                 text = boxes.parent.parent.secondary_text
-                datas["saved_cities"].pop(text)
-
-            with open(os.path.join(app_path, "UserData.json"), "w") as u:
-                json.dump(datas, u)
-
+                for i in range(2):
+                    cursor.execute(helpers.delete_saved_city_queries[i], [text])
+            conn.commit()
             screen.ids.list_container.clear_widgets()
 
-            for key in datas["saved_cities"].keys():
+            datas = cursor.execute(helpers.get_saved_cities_current_data_query).fetchall()
+            # (city_name, weather, weather_desc, temp, hum, icon, uv, wind)
+            for weather in datas:
                 checkbox = CheckboxLeftWidget(size=["48dp", "48dp"])
                 checkbox.bind(active=self.on_box_checked)
 
-                data = datas["saved_cities"][key]
-                city = ThreeLineRightIconListItem(text=f"{data['current']['temp']}°C",
-                                                  secondary_text=key,
-                                                  tertiary_text=f"Humidity: {data['current']['hum']}%",
+                city = ThreeLineRightIconListItem(text=f"{weather[3]}°C",
+                                                  secondary_text=weather[0],
+                                                  tertiary_text=f"Humidity: {weather[4]}%",
                                                   on_release=lambda x: self.change_screen("weather"), divider='Inset',
                                                   divider_color=[244 / 255, 249 / 255, 249 / 255, 0.7])
                 city.add_widget(checkbox)
@@ -324,15 +342,15 @@ class WeatherApp(MDApp):
         been granted, otherwise it will do nothing.
         """
         if platform == "android":
-           from android.permissions import request_permissions, Permission
-
-
+            from android.permissions import request_permissions, Permission
 
         request_permissions([Permission.ACCESS_COARSE_LOCATION,
                              Permission.ACCESS_FINE_LOCATION])
         # # To request permissions without a callback, do:
         # request_permissions([Permission.ACCESS_COARSE_LOCATION,
         #                      Permission.ACCESS_FINE_LOCATION])
+
+
 class HomeScreen(Screen):
     is_dark: bool = False
     app_obj = None
@@ -358,14 +376,14 @@ class HomeScreen(Screen):
             app_obj.theme_cls.theme_style = "Dark"
             with self.canvas.before:
                 Rectangle(pos=self.pos, size=self.size,
-                          source=os.path.join(functions.app_storage_path(),"images/home_bg_dm.png"))
+                          source=os.path.join(functions.app_storage_path(), "images/home_bg_dm.png"))
 
             self.ids.theme_button.icon = "weather-sunny"
         else:
             app_obj.theme_cls.theme_style = "Light"
             with self.canvas.before:
                 Rectangle(pos=self.pos, size=self.size,
-                          source=os.path.join(functions.app_storage_path(),"images/home_bg_lm.png"))
+                          source=os.path.join(functions.app_storage_path(), "images/home_bg_lm.png"))
 
             self.ids.theme_button.icon = "moon-waxing-crescent"
 
@@ -373,8 +391,10 @@ class HomeScreen(Screen):
 
 
 class WeatherScreen(Screen):
-    bg_image = os.path.join(functions.app_storage_path(),"images/morning.png")
-    images = [os.path.join(functions.app_storage_path(),"images/morning.png"),os.path.join(functions.app_storage_path(),"images/noon.png"),os.path.join(functions.app_storage_path(),"images/evening.png")]
+    bg_image = os.path.join(functions.app_storage_path(), "images/morning.png")
+    images = [os.path.join(functions.app_storage_path(), "images/morning.png"),
+              os.path.join(functions.app_storage_path(), "images/noon.png"),
+              os.path.join(functions.app_storage_path(), "images/evening.png")]
     current_index = 0
 
     def reload(self, app):
@@ -455,39 +475,29 @@ class CityListScreen(Screen):
             dialog.open()
 
             return
-        try:
-            with open(os.path.join(app_path, "UserData.json"), "r") as j:
-                datas: dict = json.load(j)
-            datas["saved_cities"][city] = city_weather
-            datas["last_update"] = datetime.now().isoformat()
-            with open(os.path.join(app_path, "UserData.json"), "w") as j:
-                json.dump(datas, j, indent=4)
+        # (city_name, weather, weather_desc, temp, hum, icon, uv, wind)
+        cursor.execute(helpers.insert_current_data_query, [city,
+                                                           city_weather["current"]["weather"],
+                                                           city_weather["current"]["weather_desc"],
+                                                           city_weather["current"]["temp"],
+                                                           city_weather["current"]["hum"],
+                                                           city_weather["current"]["icon"],
+                                                           city_weather["current"]["uv"],
+                                                           city_weather["current"]["wind"]])
 
-        except FileNotFoundError:
-            datas= {"saved_cities": {}, "last_update": None}
-            datas["saved_cities"][city] = city_weather
-            datas["last_update"] = datetime.now().isoformat()
-            try:
-                with open(os.path.join(app_path, "UserData.json"), "w") as j:
-                    json.dump(datas, j, indent=4)
-            except Exception as e:
-                dialog = MDDialog(text=f"Something is Wrong:{e}", buttons=[
-                    MDFlatButton(
-                        text="Cancel",
-                        theme_text_color="Custom",
-                        on_release=lambda x: self.stop()
-                    ),
-                    MDFlatButton(
-                        text="Retry",
-                        theme_text_color="Custom",
-                        on_release=lambda x: self.change_screen("cities")
-                    ),
-                ])
-                dialog.open()
+        # (forecast_hour, weather, weather_desc, temp, icon, city_name)
+        for hour in city_weather["forecast"].keys():
+            cursor.execute(helpers.insert_forecast_query,[hour,
+                                                          city_weather["forecast"][hour]["weather"],
+                                                          city_weather["forecast"][hour]["weather_desc"],
+                                                          city_weather["forecast"][hour]["temp"],
+                                                          city_weather["forecast"][hour]["icon"],
+                                                          city])
 
-                return
+        cursor.execute(helpers.delete_last_up)
+        cursor.execute(helpers.update_last_up, [datetime.now().isoformat()])
 
-
+        conn.commit()
         self.back_to_menu(self.app_obj)
 
     async def on_gps_click(self):
@@ -514,15 +524,30 @@ class CityListScreen(Screen):
             dialog.open()
 
             return
-        with open(os.path.join(app_path, "UserData.json"), "r") as j:
-            datas: dict = json.load(j)
 
-        datas["saved_cities"][city] = city_weather
-        datas["last_update"] = datetime.now().isoformat()
+        # (city_name, weather, weather_desc, temp, hum, icon, uv, wind)
+        cursor.execute(helpers.insert_current_data_query, [city,
+                                                           city_weather["current"]["weather"],
+                                                           city_weather["current"]["weather_desc"],
+                                                           city_weather["current"]["temp"],
+                                                           city_weather["current"]["hum"],
+                                                           city_weather["current"]["icon"],
+                                                           city_weather["current"]["uv"],
+                                                           city_weather["current"]["wind"]])
 
-        with open(os.path.join(app_path, "UserData.json"), "w") as j:
-            json.dump(datas, j, indent=4)
+        # (forecast_hour, weather, weather_desc, temp, icon, city_name)
+        for hour in city_weather["forecast"].keys():
+            cursor.execute(helpers.insert_forecast_query,[hour,
+                                                          city_weather["forecast"][hour]["weather"],
+                                                          city_weather["forecast"][hour]["weather_desc"],
+                                                          city_weather["forecast"][hour]["temp"],
+                                                          city_weather["forecast"][hour]["icon"],
+                                                          city])
 
+        cursor.execute(helpers.delete_last_up)
+        cursor.execute(helpers.update_last_up, [datetime.now().isoformat()])
+
+        conn.commit()
         self.back_to_menu(self.app_obj)
 
     def search_city(self, query):
@@ -653,8 +678,9 @@ class SwipeItem(MDSwiperItem):
         forecast_card = MDCard(pos_hint={"center_x": 0.5, "center_y": 0.32}, md_bg_color=[1, 1, 1, 1],
                                size_hint=[1, 0.2])
         forecast_layout = MDGridLayout(cols=5, padding="10dp", spacing="5dp")
-
-        for forecast in city_data:
+        print(city_data)
+        for forecast in city_data.keys():
+            # print(forecast)
             box = MDBoxLayout(orientation='vertical', spacing=5)
             time_label = MDLabel(text=forecast, font_style="Caption", halign="center", valign="top")
             forecast_temp = MDLabel(text=city_data[forecast]["temp"] + "°", font_style="Caption", halign="center",
@@ -706,11 +732,39 @@ class CheckboxLeftWidget(IRightBodyTouch, MDCheckbox):
 
 
 if __name__ == "__main__":
-    app_path = functions.app_storage_path()
+    global conn
+    conn = sq.connect("userdata.db")
+    global cursor
+    cursor = conn.cursor()
+
+    if not cursor.execute("""select name from sqlite_master where type='table'""").fetchall():
+        cursor.execute("""CREATE TABLE SavedWeatherData (
+    city_name VARCHAR(100) PRIMARY KEY NOT NULL UNIQUE,
+    weather VARCHAR(20) NOT NULL,
+    weather_desc VARCHAR(20) NOT NULL,
+    temp VARCHAR(10) NULL,
+    hum VARCHAR(10) NULL,
+    icon VARCHAR(10) NOT NULL,
+    uv VARCHAR(10) NULL,
+    wind VARCHAR(10) NULL);""")
+
+        cursor.execute("""CREATE TABLE ForecastWeathers (
+    forecast_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    forecast_hour VARCHAR(20) NOT NULL,
+    weather VARCHAR(20) NOT NULL,
+    weather_desc VARCHAR(20) NOT NULL,
+    temp VARCHAR(10) NULL,
+    icon VARCHAR(10) NOT NULL,
+    city_name VARCHAR(100) NOT NULL,
+    FOREIGN KEY (city_name) REFERENCES SavedWeatherData(city_name));""")
+        cursor.execute("""CREATE TABLE LastUpdate (
+        last_up VARCHAR(100) not null primary key);""")
+
+    app_dir = functions.app_storage_path()
 
     sm = ScreenManager()
     if platform != "android":
-        Window.size = (300,500)
+        Window.size = (300, 500)
     else:
         # from android.storage import app_storage_path
         pass
@@ -724,4 +778,4 @@ if __name__ == "__main__":
         logging.error("An error occurred: %s", str(e))
         logging.error("Traceback:\n%s", traceback.format_exc())
     except JSONDecodeError as e:
-        os.remove(os.path.join(app_path,"UserData.json"))
+        os.remove(os.path.join(app_dir, "UserData.json"))
