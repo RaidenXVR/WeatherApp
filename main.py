@@ -72,7 +72,6 @@ class WeatherApp(MDApp):
         screen.ids.swiper_main.children[0].clear_widgets()
 
         for city in data_current:
-            print(city)
             city_datas = {"Now": {"weather": city[1],
                                   "weather_desc": city[2],
                                   "temp": city[3],
@@ -402,9 +401,7 @@ class WeatherScreen(Screen):
         pass
 
     def on_swipe(self, swiper):
-        # print("swipe")
         index = swiper.get_current_index()
-        # print(index)
         if self.current_index != index:
             self.bg_image = self.images[index if index < 3 else index % len(self.images)]
             with self.canvas.before:
@@ -677,9 +674,7 @@ class SwipeItem(MDSwiperItem):
         forecast_card = MDCard(pos_hint={"center_x": 0.5, "center_y": 0.32}, md_bg_color=[1, 1, 1, 1],
                                size_hint=[1, 0.2])
         forecast_layout = MDGridLayout(cols=5, padding="10dp", spacing="5dp")
-        print(city_data)
         for forecast in city_data.keys():
-            # print(forecast)
             box = MDBoxLayout(orientation='vertical', spacing=5)
             time_label = MDLabel(text=forecast, font_style="Caption", halign="center", valign="top")
             forecast_temp = MDLabel(text=city_data[forecast]["temp"] + "°", font_style="Caption", halign="center",
