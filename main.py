@@ -726,8 +726,9 @@ class CheckboxLeftWidget(IRightBodyTouch, MDCheckbox):
 
 
 if __name__ == "__main__":
+    app_dir = functions.app_storage_path()
     global conn
-    conn = sq.connect("userdata.db")
+    conn = sq.connect(os.path.join(app_dir,"userdata.db"))
     global cursor
     cursor = conn.cursor()
 
@@ -754,7 +755,6 @@ if __name__ == "__main__":
         cursor.execute("""CREATE TABLE LastUpdate (
         last_up VARCHAR(100) not null primary key);""")
 
-    app_dir = functions.app_storage_path()
 
     sm = ScreenManager()
     if platform != "android":
