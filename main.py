@@ -82,9 +82,9 @@ class WeatherApp(MDApp):
                                   "wind": city[7]}}
             for time_forecast in data_forecast:
                 city_datas[time_forecast[2]] = {"temp": time_forecast[5],
-                                 "weather": time_forecast[3],
-                                 "weather_desc": time_forecast[4],
-                                 "icon": time_forecast[6]}
+                                                "weather": time_forecast[3],
+                                                "weather_desc": time_forecast[4],
+                                                "icon": time_forecast[6]}
 
             swiper = SwipeItem(city=city[0], city_data=city_datas)
 
@@ -193,7 +193,7 @@ class WeatherApp(MDApp):
         for city in new_datas.keys():
             current_data = new_datas[city]["current"]
             forecast_data = new_datas[city]["forecast"]
-            #(city_name, weather, weather_desc, temp, hum, icon, wind, uv)
+            # (city_name, weather, weather_desc, temp, hum, icon, wind, uv)
             cursor.execute(helpers.insert_current_data_query, [city,
                                                                current_data["weather"],
                                                                current_data["weather_desc"],
@@ -215,7 +215,6 @@ class WeatherApp(MDApp):
         cursor.execute(helpers.update_last_up, [datetime.now().isoformat()])
 
         conn.commit()
-
 
         self.update_items_list()
 
@@ -487,12 +486,12 @@ class CityListScreen(Screen):
 
         # (forecast_hour, weather, weather_desc, temp, icon, city_name)
         for hour in city_weather["forecast"].keys():
-            cursor.execute(helpers.insert_forecast_query,[hour,
-                                                          city_weather["forecast"][hour]["weather"],
-                                                          city_weather["forecast"][hour]["weather_desc"],
-                                                          city_weather["forecast"][hour]["temp"],
-                                                          city_weather["forecast"][hour]["icon"],
-                                                          city])
+            cursor.execute(helpers.insert_forecast_query, [hour,
+                                                           city_weather["forecast"][hour]["weather"],
+                                                           city_weather["forecast"][hour]["weather_desc"],
+                                                           city_weather["forecast"][hour]["temp"],
+                                                           city_weather["forecast"][hour]["icon"],
+                                                           city])
 
         cursor.execute(helpers.delete_last_up)
         cursor.execute(helpers.update_last_up, [datetime.now().isoformat()])
@@ -537,12 +536,12 @@ class CityListScreen(Screen):
 
         # (forecast_hour, weather, weather_desc, temp, icon, city_name)
         for hour in city_weather["forecast"].keys():
-            cursor.execute(helpers.insert_forecast_query,[hour,
-                                                          city_weather["forecast"][hour]["weather"],
-                                                          city_weather["forecast"][hour]["weather_desc"],
-                                                          city_weather["forecast"][hour]["temp"],
-                                                          city_weather["forecast"][hour]["icon"],
-                                                          city])
+            cursor.execute(helpers.insert_forecast_query, [hour,
+                                                           city_weather["forecast"][hour]["weather"],
+                                                           city_weather["forecast"][hour]["weather_desc"],
+                                                           city_weather["forecast"][hour]["temp"],
+                                                           city_weather["forecast"][hour]["icon"],
+                                                           city])
 
         cursor.execute(helpers.delete_last_up)
         cursor.execute(helpers.update_last_up, [datetime.now().isoformat()])

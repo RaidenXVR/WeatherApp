@@ -202,6 +202,6 @@ insert_forecast_query = """INSERT INTO ForecastWeathers (forecast_hour, weather,
     VALUES (?, ?, ?, ?, ?, ?) 
 """
 
-delete_last_up="""delete from LastUpdate"""
+delete_last_up = """delete from LastUpdate"""
 update_last_up = """insert into LastUpdate (last_up) values ( ? )"""
 get_last_up = """select * from LastUpdate"""
