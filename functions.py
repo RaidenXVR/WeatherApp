@@ -16,11 +16,11 @@ from datetime import datetime, timedelta
 from plyer import gps
 from plyer.utils import platform
 if platform == "android":
-    from android.storage import app_storage_path
+    from android.storage import app_storage_path as app_path
 
 def app_storage_path():
     if platform == "android":
-        return app_storage_path()+"/app"
+        return app_path()+"/app"
     else:
         return "."
 async def get_weather(lat: float, long: float):
