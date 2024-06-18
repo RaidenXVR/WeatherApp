@@ -149,8 +149,9 @@ class WeatherApp(MDApp):
             last_up = None
         else:
             last_up = cursor.execute(helpers.get_last_up).fetchone()[0]
-        names = [x[0] for x in user_data]
+            user_data = cursor.execute(helpers.get_saved_cities_current_data_query)
 
+        names = [x[0] for x in user_data]
         if last_up is not None:
             last_up = datetime.fromisoformat(last_up)
             now = datetime.now()
@@ -212,7 +213,6 @@ class WeatherApp(MDApp):
                                                                city])
         cursor.execute(helpers.delete_last_up)
         cursor.execute(helpers.update_last_up, [datetime.now().isoformat()])
-
         conn.commit()
 
         self.update_items_list()
@@ -771,5 +771,3 @@ if __name__ == "__main__":
     except Exception as e:
         logging.error("An error occurred: %s", str(e))
         logging.error("Traceback:\n%s", traceback.format_exc())
-    except JSONDecodeError as e:
-        os.remove(os.path.join(app_dir, "UserData.json"))
