@@ -29,7 +29,7 @@ source.exclude_dirs = tests, bin, venv
 #source.exclude_patterns = license,images/*/*.jpg
 
 # (str) Application versioning (method 1)
-version = 1.0
+version = 1.2
 
 
 # (str) Application versioning (method 2)
@@ -48,7 +48,7 @@ requirements = python3,kivy==2.3.0,kivymd==1.2.0,pillow,pyowm,requests,pytz,http
 presplash.filename = %(source.dir)s/images/splash.png
 
 # (str) Icon of the application
-icon.filename = %(source.dir)s/data/icon.png
+icon.filename = %(source.dir)s/images/icon.png
 
 # (list) Supported orientations
 # Valid options are: landscape, portrait, portrait-reverse or landscape-reverse
