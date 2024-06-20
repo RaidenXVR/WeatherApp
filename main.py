@@ -760,7 +760,6 @@ if __name__ == "__main__":
     if platform != "android":
         Window.size = (300, 500)
     else:
-        # from android.storage import app_storage_path
         pass
     sm.add_widget(WeatherScreen(name='weather'))
 
